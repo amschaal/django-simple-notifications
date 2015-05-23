@@ -9,7 +9,7 @@ groups - Should be a queryset of Group objects for all groups whose users should
 super_users - Set to True if super users should be notified
 """
 def create_notification(url,text,type=None,importance=Notification.IMPORTANCE_LOW, description='',groups=None,users=None,super_users=False):
-    notification = Notification.objects.create(url=url,text=text,type=type,importance=importance,description='description')
+    notification = Notification.objects.create(url=url,text=text,type=type,importance=importance,description=description)
     query_params = []
     if users:
         query_params.append(Q(id__in=users))
