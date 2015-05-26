@@ -3,16 +3,16 @@ from django.contrib.auth.models import User
 from datetime import date
 
 class NotificationType(models.Model):
+    id = models.CharField(max_length=15, primary_key=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True,null=True)
-#     aggregable = models.BooleanField(default=False)
-#     aggregated_text = models.CharField(max_length=250) #Use %d in text to be replaced by the number of notifications aggregated
+    aggregable = models.BooleanField(default=False)
+    aggregated_text = models.CharField(max_length=250,blank=True,null=True) #Use %d in text to be replaced by the number of notifications aggregated
 
 class Notification(models.Model):
     IMPORTANCE_LOW = 'low'
     IMPORTANCE_MEDIUM = 'medium'
     IMPORTANCE_HIGH = 'high'
-    aggregated = models.BooleanField(default=False)
     type = models.ForeignKey(NotificationType, blank=True, null=True)
     url = models.URLField()
     text = models.CharField(max_length=250)
