@@ -40,7 +40,7 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
             UserNotification.objects.create(notification=notification,user=u)
 
 
-def get_notification_type_settings(type_id):
+def get_notification_type_configuration(type_id):
     notification_type_dictionaries = getattr(settings,'NOTIFICATION_TYPES')
     for notification_type_dictionary in notification_type_dictionaries:
         notification_types = import_string(notification_type_dictionary)
@@ -49,19 +49,10 @@ def get_notification_type_settings(type_id):
     return {}
 
 def get_aggregated(type_id,user_notifications):
-    settings = get_notification_type_settings(type_id)
+    configuration = get_notification_type_configuration(type_id)
     aggregated={}
-    print '@@@@@@@@@@@@'
-    print settings
-    if settings.has_key('aggregated_text'):
-        print 'Do it!!!!'
-        aggregated['text'] = settings['aggregated_text'](user_notifications)
-    else:
-        aggregated['text'] = 'There are %d notifications'%len(user_notifications)
-    if settings.has_key('aggregated_description'):
-        aggregated['description'] = settings['aggregated_description'](user_notifications)
-    else:
-        aggregated['description'] = '\n'.join([un.notification.text for un in user_notifications])
+    aggregated['text'] = configuration.aggregated_text(user_notifications)
+    aggregated['description'] = configuration.aggregated_description(user_notifications)
     return aggregated
 
 

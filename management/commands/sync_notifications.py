@@ -14,18 +14,16 @@ class Command(BaseCommand):
         notification_type_dictionaries = getattr(settings,'NOTIFICATION_TYPES')
         for notification_type_dictionary in notification_type_dictionaries:
             notification_types = import_string(notification_type_dictionary)
-            for type_id, type_kwargs in notification_types.iteritems():
+            for type_id, configuration in notification_types.iteritems():
                 try:
                     obj = NotificationType.objects.get(id=type_id)
-                    obj.name = type_kwargs['name']
-                    obj.aggregable = type_kwargs['aggregable']
-                    if hasattr(type_kwargs, 'description'):
-                        obj.description = type_kwargs['description']
+                    obj.name = configuration.name
+                    obj.aggregable = configuration.aggregable
+                    obj.description = configuration.description
                     obj.save()
                     print "Updated notification type: " + type_id
                 except NotificationType.DoesNotExist:
-                    values = {'id':type_id,'name':type_kwargs['name'],'aggregable':type_kwargs['aggregable']}
-                    if hasattr(type_kwargs, 'description'):
-                        values['description'] = type_kwargs['description']
+                    values = {'id':type_id,'name':configuration.name,'aggregable':configuration.aggregable}
+                    values['description'] = configuration.description
                     obj = NotificationType.objects.create(**values)
                     print "Created notification type: " + type_id
