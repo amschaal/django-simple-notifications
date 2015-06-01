@@ -2,9 +2,11 @@ from models import Notification, UserNotification, NotificationSubscription
 from django.contrib.auth.models import User, Group
 from django.db.models import Q
 import operator
-
+import datetime
+from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.conf import settings
+from notifications.models import NotificationType
 
 
 
@@ -28,7 +30,8 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
         query_params.append(Q(is_superuser=True))
     users = User.objects.filter(reduce(operator.or_, query_params))
     # @todo: make UserNotifications more efficient with bulk create
-    if False:#type_id:
+    if type_id:
+        users = users.filter(notification_subscriptions__type_id=type_id,notification_subscriptions__subscribe=True)
         for s in NotificationSubscription.objects.filter(user__in = users, type_id = type_id).select_related('user'):
             UserNotification.objects.create(notification=notification,user=s.user)
             if s.email and s.user.email:
@@ -60,37 +63,92 @@ def get_aggregated(type_id,user_notifications):
 Couldn't think of a better way to aggregate notifications of the same type using Django ORM.
 Query all unseen notifications and create curated list with "aggregated" notifications.
 """
-def get_notifications(user):
+def get_notifications(user,subscribed=True,email=False):
     print 'get notifications!!!!!!!!!'
     user_notifications = UserNotification.objects.filter(user=user,seen__isnull=True).select_related('notification','notification__type').order_by('-id')
-#     type_counts = UserNotification.objects.filter(user=user,seen__isnull=True).values('id','notification__type')\
-#     .annotate(num_values=Count('type'))
-
+    subscription_dict = {}
+    for subscription in NotificationSubscription.objects.filter(user=user).select_related('type'):
+        subscription_dict[subscription.type.id] = {'subscribe':subscription.subscribe,'email':subscription.email}
+    
     #notification_by_type dictionary will hold number of times notifications with the same type and url occur (using type+url as dictionary key)
-    notification_by_type = {};
+    notifications_by_type = {};
     notifications = []
     for un in user_notifications:
+        if un.notification.type:
+            #Skip some notifications based on subscriptions
+            try:
+                if subscribed and not subscription_dict[un.notification.type.id]['subscribe']:
+                    continue
+                if email and not subscription_dict[un.notification.type.id]['email']:
+                    continue
+            except:
+                continue
         if not un.notification.type:
-            
-            print 1
-            print un.notification.type
             notifications.append(un)
         elif not un.notification.type.aggregable:
-            print 2
             notifications.append(un)
-        elif not notification_by_type.has_key(un.notification.type.id+un.notification.url):
-            print 3
-            notification_by_type[un.notification.type.id+un.notification.url] = [un]
+        elif not notifications_by_type.has_key(un.notification.type.id+un.notification.url):
+            notifications_by_type[un.notification.type.id+un.notification.url] = [un]
             notifications.append(un)
-        elif notification_by_type.has_key(un.notification.type.id+un.notification.url):
-            print 4
-            notification_by_type[un.notification.type.id+un.notification.url].append(un)
+        elif notifications_by_type.has_key(un.notification.type.id+un.notification.url):
+            notifications_by_type[un.notification.type.id+un.notification.url].append(un)
     for n in notifications:
         if n.notification.type:
-            if notification_by_type.has_key(n.notification.type.id+n.notification.url):
-                if len(notification_by_type[n.notification.type.id+n.notification.url]) > 1:
-                    aggregated = get_aggregated(n.notification.type.id, notification_by_type[n.notification.type.id+n.notification.url])
+            if notifications_by_type.has_key(n.notification.type.id+n.notification.url):
+                if len(notifications_by_type[n.notification.type.id+n.notification.url]) > 1:
+                    aggregated = get_aggregated(n.notification.type.id, notifications_by_type[n.notification.type.id+n.notification.url])
                     n.aggregated_text = aggregated['text']
                     n.aggregated_description = aggregated['description']
-    print notification_by_type
+    print notifications_by_type
     return notifications
+
+# Use this in post_save User model signal when users are created.  Otherwise, 
+def get_or_create_subscriptions(user):
+    types = NotificationType.objects.all()
+    for type in types:
+        configuration = get_notification_type_configuration(type.id)
+        if configuration.user_can_subscribe(user):
+            NotificationSubscription.objects.get_or_create(user=user,type=type)
+    return NotificationSubscription.objects.filter(user=user)
+
+
+# def email_notifications(after_datetime=timezone.now()-datetime.timedelta(hours=24)):
+#     all_user_notifications = {}
+#     for un in UserNotification.objects.filter(notification__created__gte=after_datetime,notification__type__isnull=False,seen__isnull=True).select_related('notification','user','notification__type').order_by('-id'):#prefetch_related('notification__type__notification_subscriptions').
+#         if not all_user_notifications.has_key(str(un.user.id)):
+#             all_user_notifications[str(un.user.id)] = {'user':un.user,'user_notifications':[],'notifications':[],'notification_by_type' : {},'subscription_dict':{}}
+#         all_user_notifications[str(un.user.id)]['user_notifications'].append(un)
+#     
+#     
+#     for subscription in NotificationSubscription.objects.filter(user_id__in=all_user_notifications.keys()).select_related('type','user'):
+#         all_user_notifications[str(subscription.user.id)]['subscription_dict'][subscription.type.id]={'subscribe':subscription.subscribe,'email':subscription.email}
+#     
+#     print all_user_notifications
+#     for user_dictionary in all_user_notifications.itervalues():
+#         user = user_dictionary['user']
+#         user_notifications = user_dictionary['user_notifications']
+#         notifications = []#user_dictionary['notifications']
+#         notifications_by_type = {}
+#         if user_dictionary.has_key('notifications_by_type'):
+#             notifications_by_type = user_dictionary['notifications_by_type']
+#         subscription_dict = user_dictionary['subscription_dict']
+#         for un in user_notifications:
+#             if not subscription_dict[un.notification.type.id]['email']:
+#                 continue
+#             if not un.notification.type.aggregable:
+#                 notifications.append(un)
+#             elif not notifications_by_type.has_key(un.notification.type.id+un.notification.url):
+#                 notifications_by_type[un.notification.type.id+un.notification.url] = [un]
+#                 notifications.append(un)
+#             elif notifications_by_type.has_key(un.notification.type.id+un.notification.url):
+#                 notifications_by_type[un.notification.type.id+un.notification.url].append(un)
+#         for n in notifications:
+#             if notifications_by_type.has_key(n.notification.type.id+n.notification.url):
+#                 if len(notifications_by_type[n.notification.type.id+n.notification.url]) > 1:
+#                     aggregated = get_aggregated(n.notification.type.id, notifications_by_type[n.notification.type.id+n.notification.url])
+#                     n.aggregated_text = aggregated['text']
+#                     n.aggregated_description = aggregated['description']
+# #         print notifications_by_type
+#         print user
+#         print notifications
+    

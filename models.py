@@ -31,8 +31,10 @@ class UserNotification(models.Model):
 
 class NotificationSubscription(models.Model):
     user = models.ForeignKey(User,related_name='notification_subscriptions')
-    type = models.ForeignKey(NotificationType)
+    type = models.ForeignKey(NotificationType,related_name='notification_subscriptions')
     subscribe = models.BooleanField(default=True)
     email = models.BooleanField(default=False)
+    class Meta:
+        unique_together = (("user", "type"),)
     
 
