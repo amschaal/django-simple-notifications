@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 class NotificationType(models.Model):
     id = models.CharField(max_length=15, primary_key=True)
@@ -18,7 +20,7 @@ class Notification(models.Model):
     text = models.CharField(max_length=250)
     description = models.TextField()
     created = models.DateTimeField(auto_now=True)
-    importance = models.CharField(max_length='10',choices=((IMPORTANCE_LOW,'Low'),(IMPORTANCE_MEDIUM,'Medium'),(IMPORTANCE_HIGH,'High')))
+    importance = models.CharField(max_length=10,choices=((IMPORTANCE_LOW,'Low'),(IMPORTANCE_MEDIUM,'Medium'),(IMPORTANCE_HIGH,'High')))
     def short_datetime(self):
         return self.created.strftime('%b %d, %-I:%M%p')
 
@@ -36,5 +38,15 @@ class NotificationSubscription(models.Model):
     email = models.BooleanField(default=False)
     class Meta:
         unique_together = (("user", "type"),)
+
+class UserSubscription(models.Model):
+    user = models.ForeignKey(User,related_name='user_subscriptions')
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.CharField(max_length=30) #Can be coerced into integer key if necessary
+    content_object = GenericForeignKey('content_type', 'object_id')
+    subscribed = models.BooleanField(default=True)
+    email = models.BooleanField(default=False)
+    class Meta:
+        unique_together = (("user", "content_type", "object_id"),)
     
 
