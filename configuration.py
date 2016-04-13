@@ -3,11 +3,11 @@ class NotificationConfiguration(object):
     description = 'Description of notification'
     aggregable = False
     @classmethod
-    def aggregated_text(cls,user_notifications):
-        return "There are %d '%s' notifications" % (len(user_notifications), cls.name)
+    def aggregated_text(cls,notifications):
+        return "There are %d '%s' notifications" % (len(notifications), cls.name)
     @classmethod
-    def aggregated_description(cls,user_notifications):
-        return '\n'.join([un.notification.text for un in user_notifications])
+    def aggregated_description(cls,notifications):
+        return '\n'.join([n.text for n in notifications])
     @classmethod
     def user_can_subscribe(cls,user):
         return True

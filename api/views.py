@@ -1,19 +1,21 @@
 from rest_framework import viewsets, status
-from notifications.api.serializers import  UserNotificationSerializer,\
-    UserSubscriptionSerializer
-from notifications.models import UserNotification, UserSubscription
+from notifications.api.serializers import UserSubscriptionSerializer,\
+    NotificationSerializer
+from notifications.models import UserSubscription,\
+    Notification
 from rest_framework import filters
 from rest_framework.response import Response
+from rest_framework.decorators import detail_route
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = UserNotificationSerializer
+    serializer_class = NotificationSerializer
     filter_backends = (filters.DjangoFilterBackend,filters.OrderingFilter,filters.SearchFilter,)
-    model = UserNotification
-    search_fields = ('notification__text', 'notification__description','notification__importance','seen')
-    filter_fields = ('notification__text', 'notification__description','notification__importance','seen')
-    ordering_fields = ('notification__text', 'notification__description','notification__importance','seen','notification__created')
+    model = Notification
+    search_fields = ('text', 'description','importance','seen')
+    filter_fields = ('importance','seen','aggregate','id','type','content_type','object_id')
+    ordering_fields = ('text', 'description','importance','seen','created')
     def get_queryset(self):
-        queryset = UserNotification.objects.filter(user=self.request.user).select_related('notification').order_by('-id')
+        queryset = Notification.objects.filter(user=self.request.user,aggregate__isnull=True).order_by('-id')
         if 'new' in self.request.query_params:
             new = self.request.query_params['new']
             print new
@@ -40,6 +42,12 @@ class UserSubscriptionViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    @detail_route(methods=['delete'])
+    def clear(self, request, pk=None):
+        instance = self.get_object()
+        Notification.objects.filter(content_type=instance.content_type,object_id=instance.object_id).delete()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 #     def get_queryset(self):
 #         return Note.objects.all()#get_all_user_objects(self.request.user, ['view'], Experiment)
     def perform_create(self, serializer):

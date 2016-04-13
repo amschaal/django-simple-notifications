@@ -1,20 +1,29 @@
 from django.shortcuts import render, redirect
-from models import Notification, UserNotification, NotificationType
+from models import Notification
 from datetime import datetime
-from notifications.utils import get_notification_type_configuration, get_or_create_subscriptions
+from notifications.utils import get_or_create_subscriptions
 from django.template.context import RequestContext
 from notifications.forms import NotificationSubscriptionFormset
+from notifications.api import DELETE_NOTIFICATION
+
 
 def redirect_to_url(request,pk):
     try:
-        user_notification = UserNotification.objects.get(user=request.user,notification_id=pk)
-        if user_notification.notification.type:
-            if user_notification.notification.type.aggregable:
-                UserNotification.objects.filter(user=request.user,notification__url=user_notification.notification.url,notification__type__id=user_notification.notification.type.id).update(seen=datetime.now())
-                return redirect(user_notification.notification.url)
-        user_notification.seen = datetime.now()
-        user_notification.save()
-        return redirect(user_notification.notification.url)
+        notification = Notification.objects.get(user=request.user,id=pk)
+        url = notification.url
+        if notification.type:
+            if notification.is_aggregate:
+                notifications = Notification.objects.filter(aggregate=notification)
+                if DELETE_NOTIFICATION:
+                    notifications.delete()
+                else:
+                    notifications.update(seen=datetime.now())
+        if DELETE_NOTIFICATION:
+            notification.delete()
+        else:
+            notification.seen = datetime.now()
+            notification.save()
+        return redirect(url)
     except:
         return redirect(request.META.get('HTTP_REFERER'))
 
