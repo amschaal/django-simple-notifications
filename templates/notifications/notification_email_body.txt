@@ -2,5 +2,5 @@ Dear {{user}},
 
 You have {{notifications|length}} new notification{%if notifications|length > 1%}s{%endif%}:
 {% for n in notifications %}
--{{n.notification.short_datetime}}: {% if n.aggregated_text%}{{n.aggregated_text}}{% else %}{{n.notification.text}}{% endif %}
+-{{n.short_datetime}}: {{n.text}}
 {% endfor %}

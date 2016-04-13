@@ -4,11 +4,7 @@ You have {{notifications|length}} new notification{%if notifications|length > 1%
 <ul>
 {% for n in notifications %}
 <li>
-	{% if n.aggregated_text%}
-		<a href="{% url 'notifications_redirect_to_url' pk=n.notification.id %}" title="{{n.aggregated_description}}"><b>{{n.notification.short_datetime}}</b> {{n.aggregated_text}}</a>
-	{% else %}
-       	<a href="{% url 'notifications_redirect_to_url' pk=n.notification.id %}" title="{{n.notification.description}}"><b>{{n.notification.short_datetime}}</b> {{n.notification.text}}</a>
-    {% endif %}
+       	<a href="{% url 'notifications_redirect_to_url' pk=n.id %}" title="{{n.description}}"><b>{{n.short_datetime}}</b> {{n.text}}</a>
 </li>
 {% endfor %}
 </ul>
