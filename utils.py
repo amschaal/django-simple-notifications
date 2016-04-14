@@ -1,4 +1,4 @@
-from models import Notification, NotificationSubscription
+from models import Notification, NotificationTypeSubscription
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
@@ -39,7 +39,7 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
 #     print users
     if type_id:
         users = users.filter(notification_subscriptions__type_id=type_id,notification_subscriptions__subscribe=True)
-        for s in NotificationSubscription.objects.filter(user__in = users, type_id = type_id).select_related('user'):
+        for s in NotificationTypeSubscription.objects.filter(user__in = users, type_id = type_id).select_related('user'):
 #             UserNotification.objects.create(notification=notification,user=s.user)
             if instance:
                 notification = Notification.objects.create(user=s.user,url=url,text=text,type_id=type_id,importance=importance,description=description,content_object=instance)
@@ -94,7 +94,7 @@ def get_or_create_subscriptions(user):
     for type in types:
         configuration = get_notification_type_configuration(type.id)
         if configuration.user_can_subscribe(user):
-            NotificationSubscription.objects.get_or_create(user=user,type=type)
-    return NotificationSubscription.objects.filter(user=user)
+            NotificationTypeSubscription.objects.get_or_create(user=user,type=type)
+    return NotificationTypeSubscription.objects.filter(user=user)
 
 

@@ -39,7 +39,7 @@ class Notification(models.Model):
 #     user = models.ForeignKey(User)
 #     seen = models.DateTimeField(null=True,blank=True)
 
-class NotificationSubscription(models.Model):
+class NotificationTypeSubscription(models.Model):
     user = models.ForeignKey(User,related_name='notification_subscriptions')
     type = models.ForeignKey(NotificationType,related_name='notification_subscriptions')
     subscribe = models.BooleanField(default=True)

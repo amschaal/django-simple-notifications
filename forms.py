@@ -1,9 +1,9 @@
 from django import forms
-from notifications.models import NotificationSubscription
+from notifications.models import NotificationTypeSubscription
 from django.forms.models import modelformset_factory
-class NotificationSubscriptionForm(forms.ModelForm):
+class NotificationTypeSubscriptionForm(forms.ModelForm):
     class Meta:
-        model = NotificationSubscription
+        model = NotificationTypeSubscription
         fields = ('subscribe','email')
 #     def __init__(self,*args,**kwargs):
 #         user = kwargs.pop('user')
@@ -12,4 +12,4 @@ class NotificationSubscriptionForm(forms.ModelForm):
 #         if self.instance.id:
 #             self.fields.pop('id')
 
-NotificationSubscriptionFormset = modelformset_factory(NotificationSubscription,form=NotificationSubscriptionForm,extra=0)
+NotificationSubscriptionFormset = modelformset_factory(NotificationTypeSubscription,form=NotificationTypeSubscriptionForm,extra=0)

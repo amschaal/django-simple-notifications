@@ -4,7 +4,7 @@ from datetime import datetime
 from notifications.utils import get_or_create_subscriptions
 from django.template.context import RequestContext
 from notifications.forms import NotificationSubscriptionFormset
-from notifications.api import DELETE_NOTIFICATION
+from notifications import DELETE_NOTIFICATION
 
 
 def redirect_to_url(request,pk):
