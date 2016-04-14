@@ -1,15 +1,11 @@
 from models import Notification, NotificationSubscription
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 import operator
-import datetime
-from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.conf import settings
 from notifications.models import NotificationType, UserSubscription
-
-
 
 
 
@@ -92,7 +88,6 @@ def get_aggregated(type_id,user_notifications):
     return aggregated
 
 
-
 # Use this in post_save User model signal when users are created.  Otherwise, 
 def get_or_create_subscriptions(user):
     types = NotificationType.objects.all()
@@ -102,53 +97,4 @@ def get_or_create_subscriptions(user):
             NotificationSubscription.objects.get_or_create(user=user,type=type)
     return NotificationSubscription.objects.filter(user=user)
 
-def email_notifications():
-    # Returning all users, why?
-    for u in User.objects.filter(notifications__aggregate__isnull=True,notifications__seen__isnull=True,notifications__emailed__isnull=True):
-        types = NotificationType.objects.filter(notification_subscriptions__email=True,notification_subscriptions__user=u)
-        notifications = Notification.objects.filter(aggregate__isnull=True,seen__isnull=True,emailed__isnull=True,user=u).filter(Q(type__in=types)|Q(type__isnull=True))
-        print u
-        print notifications
-#     notifications = Notification.objects.filter(aggregate__isnull=True,seen__isnull=True,emailed__isnull=True)
-#     subscriptions = NotificationSubscription.objects.filter(email=True)
 
-def email_notifications_old(after_datetime=None):#timezone.now()-datetime.timedelta(hours=24)
-    all_user_notifications = {}
-    for un in Notification.objects.filter(created__gte=after_datetime,notification__type__isnull=False,seen__isnull=True).select_related('type','user','notification__type').order_by('-id'):#prefetch_related('notification__type__notification_subscriptions').
-        if not all_user_notifications.has_key(str(un.user.id)):
-            all_user_notifications[str(un.user.id)] = {'user':un.user,'user_notifications':[],'notifications':[],'notification_by_type' : {},'subscription_dict':{}}
-        all_user_notifications[str(un.user.id)]['user_notifications'].append(un)
-     
-     
-    for subscription in NotificationSubscription.objects.filter(user_id__in=all_user_notifications.keys()).select_related('type','user'):
-        all_user_notifications[str(subscription.user.id)]['subscription_dict'][subscription.type.id]={'subscribe':subscription.subscribe,'email':subscription.email}
-     
-    print all_user_notifications
-    for user_dictionary in all_user_notifications.itervalues():
-        user = user_dictionary['user']
-        user_notifications = user_dictionary['user_notifications']
-        notifications = []#user_dictionary['notifications']
-        notifications_by_type = {}
-        if user_dictionary.has_key('notifications_by_type'):
-            notifications_by_type = user_dictionary['notifications_by_type']
-        subscription_dict = user_dictionary['subscription_dict']
-        for un in user_notifications:
-            if not subscription_dict[un.notification.type.id]['email']:
-                continue
-            if not un.notification.type.aggregable:
-                notifications.append(un)
-            elif not notifications_by_type.has_key(un.notification.type.id+un.notification.url):
-                notifications_by_type[un.notification.type.id+un.notification.url] = [un]
-                notifications.append(un)
-            elif notifications_by_type.has_key(un.notification.type.id+un.notification.url):
-                notifications_by_type[un.notification.type.id+un.notification.url].append(un)
-        for n in notifications:
-            if notifications_by_type.has_key(n.notification.type.id+n.notification.url):
-                if len(notifications_by_type[n.notification.type.id+n.notification.url]) > 1:
-                    aggregated = get_aggregated(n.notification.type.id, notifications_by_type[n.notification.type.id+n.notification.url])
-                    n.aggregated_text = aggregated['text']
-                    n.aggregated_description = aggregated['description']
-#         print notifications_by_type
-        print user
-        print notifications
-    
