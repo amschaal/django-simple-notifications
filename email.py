@@ -15,9 +15,10 @@ if hasattr(settings,'NOTIFICATION_EMAIL_FREQUENCY_HOURS'):
     EMAIL_FREQUENCY_HOURS = settings.NOTIFICATION_EMAIL_FREQUENCY_HOURS
 
 def email_user_notifications(user,notifications):
-    body = render_to_string('notifications/notification_email_body.txt',{'user':user,'notifications':notifications})
-    html_body = render_to_string('notifications/notification_email_body.html',{'user':user,'notifications':notifications})
-    subject = render_to_string('notifications/notification_email_subject.txt',{'user':user,'notifications':notifications})
+    context = {'user':user,'notifications':notifications, 'SITE_URL':settings.SITE_URL}
+    body = render_to_string('notifications/notification_email_body.txt',context)
+    html_body = render_to_string('notifications/notification_email_body.html',context)
+    subject = render_to_string('notifications/notification_email_subject.txt',context)
     send_mail(subject, body, 'no-reply@genomecenter.ucdavis.edu',[user.email], fail_silently=False,html_message=html_body)
 def email_notifications():
     # Returning all users, why?
