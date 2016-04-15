@@ -55,6 +55,7 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
                     aggregate = Notification.objects.get(user=s.user,url=url,type_id=type_id,is_aggregate=True,seen__isnull=True)
                     aggregate.text = aggregated['text']
                     aggregate.description = aggregated['description']
+                    aggregate.emailed = None
                     aggregate.save()
                 except Notification.DoesNotExist:
                     if instance:
