@@ -35,7 +35,7 @@ class Notification(models.Model):
         if '?' in self.url:
             return self.url + '&notification_id=%d'%self.id
         else:
-            return self.url
+            return self.url + '?notification_id=%d'%self.id
 # class UserNotification(models.Model):
 # #     aggregate = models.BooleanField(default=False)
 # #     aggregated_to = models.ForeignKey('UserNotification',null=True,blank=True)
