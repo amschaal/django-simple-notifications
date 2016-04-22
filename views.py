@@ -5,8 +5,10 @@ from notifications.utils import get_or_create_subscriptions
 from django.template.context import RequestContext
 from notifications.forms import NotificationSubscriptionFormset
 from notifications import DELETE_NOTIFICATION
+from django.contrib.auth.decorators import login_required
 
-
+# @deprecated - use notifications middleware to process notification_id in url from notification.get_url()
+@login_required
 def redirect_to_url(request,pk):
     try:
         notification = Notification.objects.get(user=request.user,id=pk)
@@ -27,6 +29,7 @@ def redirect_to_url(request,pk):
     except:
         return redirect(request.META.get('HTTP_REFERER'))
 
+@login_required
 def manage_subscriptions(request):
 #     types = NotificationType.objects.all()
 #     type_list = []

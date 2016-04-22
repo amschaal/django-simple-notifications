@@ -31,7 +31,11 @@ class Notification(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     def short_datetime(self):
         return self.created.strftime('%b %d, %-I:%M%p')
-
+    def get_url(self):
+        if '?' in self.url:
+            return self.url + '&notification_id=%d'%self.id
+        else:
+            return self.url
 # class UserNotification(models.Model):
 # #     aggregate = models.BooleanField(default=False)
 # #     aggregated_to = models.ForeignKey('UserNotification',null=True,blank=True)
