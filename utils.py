@@ -6,6 +6,7 @@ import operator
 from django.utils.module_loading import import_string
 from django.conf import settings
 from notifications.models import NotificationType, UserSubscription
+from notifications.signals import notification_created
 
 
 
@@ -71,7 +72,7 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
         for u in users:
 #             UserNotification.objects.create(notification=notification,user=u)
             notification = Notification.objects.create(user=s.user,url=url,text=text,importance=importance,description=description)
-
+    notification_created.send(sender=Notification,url=url,text=text,type_id=type_id,importance=importance, description=description,groups=groups,users=users, instance=instance,super_users=super_users, exclude_user=exclude_user)
 
 def get_notification_type_configuration(type_id):
     notification_type_dictionaries = getattr(settings,'NOTIFICATION_TYPES')
