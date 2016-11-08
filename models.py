@@ -57,7 +57,7 @@ class UserSubscription(models.Model):
     object_id = models.CharField(max_length=30) #Can be coerced into integer key if necessary
     content_object = GenericForeignKey('content_type', 'object_id')
     subscribed = models.BooleanField(default=True)
-    email = models.BooleanField(default=False)
+    email = models.BooleanField(default=True)
     class Meta:
         unique_together = (("user", "content_type", "object_id"),)
     

@@ -31,6 +31,8 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
     if super_users:
         query_params.append(Q(is_superuser=True))
     users = User.objects.filter(reduce(operator.or_, query_params))
+    print "Notification users"
+    print users
     if exclude_user:
         users = users.exclude(id=exclude_user.id)
 
