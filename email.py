@@ -15,7 +15,7 @@ def email_user_notifications(user,notifications):
     body = render_to_string('notifications/notification_email_body.txt',context)
     html_body = render_to_string('notifications/notification_email_body.html',context)
     subject = render_to_string('notifications/notification_email_subject.txt',context)
-    send_mail(subject, body, 'no-reply@genomecenter.ucdavis.edu',[user.email], fail_silently=False,html_message=html_body)
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL ,[user.email], fail_silently=False,html_message=html_body)
 
 def email_notifications():
     # Returning all users, why?

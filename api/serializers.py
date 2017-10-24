@@ -4,7 +4,7 @@ from notifications.models import Notification, UserSubscription
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-
+        fields = '__all__'
 # class UserNotificationSerializer(serializers.ModelSerializer):
 #     notification = NotificationSerializer(many=False)#serializers.RelatedField(many=False)
 #     class Meta:
@@ -18,3 +18,4 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
         return NotificationSerializer(notifications,many=True).data
     class Meta:
         model = UserSubscription
+        fields = '__all__'
