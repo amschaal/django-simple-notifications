@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
+from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
@@ -30,7 +31,7 @@ class Notification(models.Model):
     object_id = models.CharField(max_length=30,null=True) #Can be coerced into integer key if necessary
     content_object = GenericForeignKey('content_type', 'object_id')
     def short_datetime(self):
-        return self.created.strftime('%b %d, %-I:%M%p')
+        return timezone.localtime(self.created).strftime('%b %d, %-I:%M%p')
     def get_url(self):
         if '?' in self.url:
             return self.url + '&notification_id=%d'%self.id
