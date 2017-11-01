@@ -43,4 +43,4 @@ def manage_subscriptions(request):
         formset.save()
     else:
         formset = NotificationSubscriptionFormset(queryset=subscriptions)
-    return render(request, 'notifications/subscriptions.html', {'formset':formset},context_instance=RequestContext(request))
+    return render(request, 'notifications/subscriptions.html', {'formset':formset})

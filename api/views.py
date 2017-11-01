@@ -4,12 +4,13 @@ from notifications.api.serializers import UserSubscriptionSerializer,\
 from notifications.models import UserSubscription,\
     Notification
 from rest_framework import filters
+import django_filters
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificationSerializer
-    filter_backends = (filters.DjangoFilterBackend,filters.OrderingFilter,filters.SearchFilter,)
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,filters.OrderingFilter,filters.SearchFilter,)
     model = Notification
     search_fields = ('text', 'description','importance','seen')
     filter_fields = ('importance','seen','aggregate','id','type','content_type','object_id')
