@@ -73,7 +73,7 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
     else:
         for u in users:
 #             UserNotification.objects.create(notification=notification,user=u)
-            notification = Notification.objects.create(user=s.user,url=url,text=text,importance=importance,description=description)
+            notification = Notification.objects.create(user=u,url=url,text=text,importance=importance,description=description,content_object=instance)
     notification_created.send(sender=Notification,url=url,text=text,type_id=type_id,importance=importance, description=description,groups=groups,users=users, instance=instance,super_users=super_users, exclude_user=exclude_user)
 
 def get_notification_type_configuration(type_id):
