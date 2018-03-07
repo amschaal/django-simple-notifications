@@ -54,13 +54,13 @@ def create_notification(url,text,type_id=None,importance=Notification.IMPORTANCE
             #Handle aggregate cases
             if notifications.count() > 1 and notification.type.aggregable:
                 aggregated = get_aggregated(type_id,notifications)
-                try:
-                    aggregate = Notification.objects.get(user=s.user,url=url,type_id=type_id,is_aggregate=True,seen__isnull=True)
+                aggregate = Notification.objects.filter(user=s.user,url=url,type_id=type_id,is_aggregate=True,seen__isnull=True).first()
+                if aggregate:
                     aggregate.text = aggregated['text']
                     aggregate.description = aggregated['description']
                     aggregate.emailed = None
                     aggregate.save()
-                except Notification.DoesNotExist:
+                else:
                     if instance:
                         aggregate = Notification.objects.create(user=s.user,url=url,type_id=type_id,is_aggregate=True,text=aggregated['text'],description=aggregated['description'],importance=importance,content_object=instance)
                     else:
