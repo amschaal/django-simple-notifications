@@ -4,6 +4,8 @@ from datetime import date
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.conf import settings
+import urlparse
 
 class NotificationType(models.Model):
     id = models.CharField(max_length=15, primary_key=True)
@@ -34,9 +36,9 @@ class Notification(models.Model):
         return timezone.localtime(self.created).strftime('%b %d, %-I:%M%p')
     def get_url(self):
         if '?' in self.url:
-            return self.url + '&notification_id=%d'%self.id
+            return urlparse.urljoin(settings.SITE_URL,self.url + '&notification_id=%d'%self.id)
         else:
-            return self.url + '?notification_id=%d'%self.id
+            return urlparse.urljoin(settings.SITE_URL,self.url + '?notification_id=%d'%self.id)
 # class UserNotification(models.Model):
 # #     aggregate = models.BooleanField(default=False)
 # #     aggregated_to = models.ForeignKey('UserNotification',null=True,blank=True)
